@@ -4,11 +4,12 @@ services:
     name: tourism-recommender-api
     runtime: go
     plan: free
-    env: go
     # Build command: navigate to backend directory and build
     buildCommand: cd backend && go build -o main main.go
     # Start command: run the binary from backend directory
     startCommand: cd backend && ./main
+    # Health check path - Render will use this to check if the service is running
+    healthCheckPath: /api/v1/health
     envVars:
       # Application Configuration
       - key: GIN_MODE

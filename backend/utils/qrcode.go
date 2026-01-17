@@ -53,7 +53,7 @@ func GenerateWxappQRCode(appID, path string) (string, error) {
 // GenerateRecommendorQRs generates both web and Mini Program QR codes for a recommendor
 func GenerateRecommendorQRs(config QRCodeConfig, recommendorID uint) (webQR, wxappQR string, err error) {
 	// Generate web QR code
-	webURL := fmt.Sprintf("%s/recommendor/%d", strings.TrimSuffix(config.BaseURL, "/"), recommendorID)
+	webURL := fmt.Sprintf("%s/recommendors/%d", strings.TrimSuffix(config.BaseURL, "/"), recommendorID)
 	webQR, err = GenerateWebQRCode(webURL)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to generate web QR code: %v", err)
