@@ -2,13 +2,13 @@
 App({
   globalData: {
     // API基础配置 - 需要替换为实际的 API 地址
-    apiBaseUrl: "http://localhost:8082/api",
+    apiBaseUrl: "https://tourism-recommender-api.onrender.com/api",
     // 系统信息
     systemInfo: null,
   },
 
   onLaunch(options) {
-    console.log("小程序启动", options);
+    console.log("小程序启动", options); 
 
     // 获取系统信息
     this.getSystemInfo();

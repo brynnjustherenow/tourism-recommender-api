@@ -84,6 +84,11 @@ func main() {
 	// Create Gin router
 	router := gin.Default()
 
+	// Configure trusted proxies for Render's reverse proxy
+	// Render terminates SSL and forwards requests via reverse proxy
+	// We need to trust the proxy to get correct scheme (http/https) and host
+	router.SetTrustedProxies([]string{"0.0.0.0/0"})
+
 	// Setup middleware
 	routes.SetupMiddleware(router)
 

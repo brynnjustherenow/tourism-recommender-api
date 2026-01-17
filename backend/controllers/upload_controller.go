@@ -192,8 +192,11 @@ func (uc *UploadController) UploadDocument(c *gin.Context) {
 // getFullURL constructs the complete URL from request and relative path
 func getFullURL(c *gin.Context, relativePath string) string {
 	// Get scheme (http or https)
+	// Check X-Forwarded-Proto header first (set by reverse proxies like Render)
 	scheme := "http"
-	if c.Request.TLS != nil {
+	if proto := c.GetHeader("X-Forwarded-Proto"); proto != "" {
+		scheme = proto
+	} else if c.Request.TLS != nil {
 		scheme = "https"
 	}
 
