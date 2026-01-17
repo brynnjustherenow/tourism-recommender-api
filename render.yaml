@@ -57,13 +57,13 @@ services:
       - key: BASE_URL
         value: https://tourism-recommender-api.onrender.com
       - key: WX_APP_ID
-        value: wxa1802e324f2f4712
+        value: wx2fe0adb922019fb8
       - key: WX_APP_PATH
         value: pages/recommendor/detail
       # WeChat Mini Program AppSecret (get from https://mp.weixin.qq.com)
       # DO NOT use generateValue - this should be your actual secret from WeChat
       - key: WX_APP_SECRET
-        value: abf7054e9cef7ed3d65de4e453217ea6
+        value: 1e9e91b973084681e49e16cf8a9f301c
 
 # Database Configuration
 databases:

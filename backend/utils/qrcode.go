@@ -115,6 +115,8 @@ func generateWxappCodeFromAPI(appID, appSecret, path string) (string, error) {
 		return "", fmt.Errorf("failed to get access token: %v", err)
 	}
 
+	log.Printf("✅ Got access token (length: %d)", len(accessToken))
+
 	// Step 2: Extract page path and scene from the full path
 	// Format: pages/recommendor/detail?id=123
 	var pagePath, scene string
@@ -152,10 +154,24 @@ func generateWxappCodeFromAPI(appID, appSecret, path string) (string, error) {
 	}
 	defer resp.Body.Close()
 
+	log.Printf("WeChat API response status: %d", resp.StatusCode)
+	log.Printf("WeChat API response headers: %+v", resp.Header)
+
 	// Step 5: Read response body
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", fmt.Errorf("failed to read response body: %v", err)
+	}
+
+	log.Printf("WeChat API response body size: %d bytes", len(body))
+
+	// Log first 100 bytes to help debug
+	if len(body) > 0 {
+		previewSize := 100
+		if len(body) < previewSize {
+			previewSize = len(body)
+		}
+		log.Printf("Response preview (first %d bytes): %q", previewSize, body[:previewSize])
 	}
 
 	// Step 6: Check if response is an error (JSON) or image (binary)
@@ -163,13 +179,17 @@ func generateWxappCodeFromAPI(appID, appSecret, path string) (string, error) {
 	var errResp WeChatErrorResponse
 	if err := json.Unmarshal(body, &errResp); err == nil && errResp.ErrCode != 0 {
 		// This is an error response
+		log.Printf("❌ WeChat API returned error: [%d] %s", errResp.ErrCode, errResp.ErrMsg)
 		return "", fmt.Errorf("WeChat API error [%d]: %s", errResp.ErrCode, errResp.ErrMsg)
 	}
 
 	// If we can't parse as JSON error, it should be image data
 	// Verify content type
 	contentType := resp.Header.Get("Content-Type")
+	log.Printf("Response content type: %s", contentType)
+
 	if contentType != "image/jpeg" && contentType != "image/png" {
+		log.Printf("❌ Unexpected content type: %s", contentType)
 		return "", fmt.Errorf("unexpected content type: %s, expected image", contentType)
 	}
 
@@ -204,12 +224,15 @@ func getAccessToken(appID, appSecret string) (string, error) {
 
 	// Double-check after acquiring write lock
 	if tokenCache.token != "" && time.Now().Before(tokenCache.expiresAt) {
-		log.Printf("✅ Using cached access token (expires in: %v)", time.Until(tokenCache.expiresAt))
+		timeUntilExpiry := time.Until(tokenCache.expiresAt)
+		log.Printf("✅ Using cached access token after double-check")
+		log.Printf("   Token expires in: %v at %s", timeUntilExpiry, tokenCache.expiresAt.Format("15:04:05"))
 		return tokenCache.token, nil
 	}
 
 	// Prevent multiple concurrent refresh attempts
 	if tokenRefresh {
+		log.Printf("⏳ Token refresh already in progress, waiting...")
 		// Wait for the current refresh to complete
 		for tokenRefresh {
 			tokenMutex.Unlock()
@@ -217,6 +240,9 @@ func getAccessToken(appID, appSecret string) (string, error) {
 			tokenMutex.Lock()
 		}
 		if tokenCache.token != "" && time.Now().Before(tokenCache.expiresAt) {
+			timeUntilExpiry := time.Until(tokenCache.expiresAt)
+			log.Printf("✅ Token refresh completed, using cached token")
+			log.Printf("   Token expires in: %v at %s", timeUntilExpiry, tokenCache.expiresAt.Format("15:04:05"))
 			return tokenCache.token, nil
 		}
 	}
@@ -228,40 +254,67 @@ func getAccessToken(appID, appSecret string) (string, error) {
 	tokenURL := fmt.Sprintf("https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=%s&secret=%s", appID, appSecret)
 
 	log.Printf("🔄 Fetching new access token from WeChat API...")
+	log.Printf("Token API URL: %s", tokenURL)
 
 	resp, err := http.Get(tokenURL)
 	if err != nil {
+		log.Printf("❌ Failed to call WeChat token API: %v", err)
 		return "", fmt.Errorf("failed to call WeChat token API: %v", err)
 	}
 	defer resp.Body.Close()
 
+	log.Printf("Token API response status: %d", resp.StatusCode)
+
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
+		log.Printf("❌ Failed to read token response: %v", err)
 		return "", fmt.Errorf("failed to read token response: %v", err)
 	}
 
+	log.Printf("Token API response body: %s", string(body))
+
 	var tokenResp WeChatTokenResponse
 	if err := json.Unmarshal(body, &tokenResp); err != nil {
+		log.Printf("❌ Failed to parse token response: %v", err)
 		return "", fmt.Errorf("failed to parse token response: %v", err)
 	}
 
 	// Check for API errors
 	if tokenResp.ErrCode != 0 {
+		log.Printf("❌ WeChat token API error [%d]: %s", tokenResp.ErrCode, tokenResp.ErrMsg)
 		return "", fmt.Errorf("WeChat token API error [%d]: %s", tokenResp.ErrCode, tokenResp.ErrMsg)
 	}
 
 	// Cache the token with a 5-minute buffer before expiration
-	expiresIn := time.Duration(tokenResp.ExpiresIn-300) * time.Second
-	if expiresIn < 0 {
-		expiresIn = 5 * time.Minute
+	// WeChat returns expires_in in seconds, multiply by time.Second to convert to Duration
+	expiresInSeconds := tokenResp.ExpiresIn
+	if expiresInSeconds <= 0 {
+		// Fallback if WeChat doesn't return expiration time
+		expiresInSeconds = 7200 // Default to 2 hours
+		log.Printf("⚠️  WeChat did not return expires_in, using default 7200 seconds")
 	}
+
+	// Subtract 5 minutes (300 seconds) to refresh before expiration
+	bufferSeconds := 300
+	expiresInSeconds = expiresInSeconds - bufferSeconds
+	if expiresInSeconds < 60 {
+		// Ensure minimum cache time of 1 minute
+		expiresInSeconds = 60
+		log.Printf("⚠️  Adjusted expiration time to minimum 60 seconds")
+	}
+
+	expiresIn := time.Duration(expiresInSeconds) * time.Second
 
 	tokenCache = cachedToken{
 		token:     tokenResp.AccessToken,
 		expiresAt: time.Now().Add(expiresIn),
 	}
 
-	log.Printf("✅ Successfully fetched new access token (expires in: %v)", expiresIn)
+	log.Printf("✅ Successfully fetched new access token")
+	log.Printf("   Token length: %d characters", len(tokenResp.AccessToken))
+	log.Printf("   Original expires_in: %d seconds from WeChat", tokenResp.ExpiresIn)
+	log.Printf("   Cache duration: %v (with %d second buffer)", expiresIn, bufferSeconds)
+	log.Printf("   Will expire at: %s", tokenCache.expiresAt.Format("2006-01-02 15:04:05"))
 
 	return tokenCache.token, nil
 }
