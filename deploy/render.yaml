@@ -8,10 +8,13 @@ services:
     buildCommand: go build -o main main.go
     startCommand: ./main
     envVars:
+      # Application Configuration
       - key: GIN_MODE
         value: release
       - key: SERVER_PORT
         value: 8080
+
+      # Database Configuration (automatically linked from PostgreSQL service)
       - fromDatabase:
           name: tourism-recommender-db
           property: connectionString
@@ -38,6 +41,22 @@ services:
           property: database
       - key: DB_SSLMODE
         value: require
+
+      # Admin Default Configuration (optional, defaults will be used if not set)
+      - key: DEFAULT_ADMIN_USERNAME
+        value: admin
+      - key: DEFAULT_ADMIN_PASSWORD
+        generateValue: true
+      - key: DEFAULT_ADMIN_EMAIL
+        value: admin@tourism.com
+
+      # QR Code Configuration (update these with your actual values)
+      - key: BASE_URL
+        value: https://tourism-recommender-api.onrender.com
+      - key: WX_APP_ID
+        value: wxa1802e324f2f4712
+      - key: WX_APP_PATH
+        value: pages/recommendor/detail
 
 # Database Configuration
 databases:

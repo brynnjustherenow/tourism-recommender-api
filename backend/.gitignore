@@ -3,11 +3,14 @@
 *.exe~
 *.dll
 *.so
+*.png
+*.jpeg
+*.jpg
 *.dylib
 bin/
 dist/
 build/
-
+/uploads/
 # Test binary, built with `go test -c`
 *.test
 
