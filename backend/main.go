@@ -44,6 +44,13 @@ func main() {
 	}
 	log.Println("Database migrations completed successfully")
 
+	// Seed initial data
+	log.Println("Seeding initial data...")
+	if err := routes.SeedDatabase(config.DB); err != nil {
+		log.Fatalf("Failed to seed initial data: %v", err)
+	}
+	log.Println("Initial data seeding completed successfully")
+
 	// Initialize upload directories
 	log.Println("Initializing upload directories...")
 	if err := utils.InitUploadDirectories(); err != nil {

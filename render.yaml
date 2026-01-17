@@ -48,7 +48,7 @@ services:
       - key: DEFAULT_ADMIN_USERNAME
         value: admin
       - key: DEFAULT_ADMIN_PASSWORD
-        generateValue: true
+        value: admin123456
       - key: DEFAULT_ADMIN_EMAIL
         value: admin@tourism.com
 

@@ -1,6 +1,8 @@
 package routes
 
 import (
+	"os"
+
 	"tourism_recommendor/controllers"
 	"tourism_recommendor/middleware"
 	"tourism_recommendor/models"
@@ -238,4 +240,62 @@ func AutoMigrate(db *gorm.DB) error {
 		&models.Destination{},
 	)
 	return err
+}
+
+// SeedDatabase creates default data (admin user) if they don't exist
+func SeedDatabase(db *gorm.DB) error {
+	// Get default admin credentials from environment or use defaults
+	defaultUsername := os.Getenv("DEFAULT_ADMIN_USERNAME")
+	if defaultUsername == "" {
+		defaultUsername = "admin"
+	}
+
+	defaultPassword := os.Getenv("DEFAULT_ADMIN_PASSWORD")
+	if defaultPassword == "" {
+		defaultPassword = "admin123456"
+	}
+
+	defaultEmail := os.Getenv("DEFAULT_ADMIN_EMAIL")
+	if defaultEmail == "" {
+		defaultEmail = "admin@tourism.com"
+	}
+
+	// Check if admin already exists
+	var existingAdmin models.Admin
+	result := db.Where("username = ?", defaultUsername).First(&existingAdmin)
+
+	if result.Error == nil {
+		// Admin already exists, update email if needed
+		if existingAdmin.Email != defaultEmail {
+			existingAdmin.Email = defaultEmail
+			db.Save(&existingAdmin)
+		}
+		return nil
+	}
+
+	if result.Error != nil && result.Error.Error() != "record not found" {
+		return result.Error
+	}
+
+	// Create new admin
+	admin := &models.Admin{
+		Username: defaultUsername,
+		Email:    defaultEmail,
+		Name:     "超级管理员",
+		Role:     models.AdminRoleSuperAdmin,
+		Status:   "active",
+		Phone:    "13800138000",
+	}
+
+	// Set password (this will hash it automatically)
+	if err := admin.SetPassword(defaultPassword); err != nil {
+		return err
+	}
+
+	// Save to database
+	if err := db.Create(admin).Error; err != nil {
+		return err
+	}
+
+	return nil
 }
