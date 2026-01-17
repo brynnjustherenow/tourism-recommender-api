@@ -1,0 +1,131 @@
+<!--pages/recommendor/list.wxml-->
+<view class="container">
+  <!-- 头部 -->
+  <view class="header">
+    <text class="title">旅游推荐官</text>
+    <text class="subtitle">发现专业的旅游推荐官，开启您的完美旅程</text>
+  </view>
+
+  <!-- 筛选卡片 -->
+  <view class="filter-card">
+    <!-- 姓名搜索 -->
+    <view class="filter-item">
+      <view class="input-wrapper">
+        <text class="input-icon">👤</text>
+        <input
+          class="input"
+          placeholder="搜索推荐官姓名"
+          value="{{filters.name}}"
+          bindinput="onNameInput"
+        />
+        <text class="clear-icon" wx:if="{{filters.name}}" bindtap="onReset">✕</text>
+      </view>
+    </view>
+
+    <!-- 地区选择 -->
+    <view class="filter-item">
+      <picker
+        class="picker-wrapper"
+        mode="region"
+        value="{{region}}"
+        bindchange="onRegionChange"
+      >
+        <text class="picker-icon">📍</text>
+        <text class="picker-text">{{regionText}}</text>
+        <text class="picker-arrow">›</text>
+      </picker>
+      <text class="clear-region" wx:if="{{filters.province || filters.city || filters.district}}" bindtap="clearRegion">清除</text>
+    </view>
+
+    <!-- 搜索按钮 -->
+    <view class="filter-actions">
+      <button class="search-btn" bindtap="onSearch">🔍 搜索</button>
+      <button class="reset-btn" bindtap="onReset">重置</button>
+    </view>
+  </view>
+
+  <!-- 加载中 -->
+  <view class="loading-container" wx:if="{{loading && recommendors.length === 0}}">
+    <text class="loading-text">加载中...</text>
+  </view>
+
+  <!-- 推荐官列表 -->
+  <view class="recommendors-list" wx:if="{{!loading || recommendors.length > 0}}">
+    <!-- 推荐官卡片 -->
+    <view
+      class="recommendor-card"
+      wx:for="{{recommendors}}"
+      wx:key="id"
+      bindtap="onViewDetail"
+      data-id="{{item.id}}"
+    >
+      <!-- 头像 -->
+      <view class="card-avatar">
+        <image
+          class="avatar-image"
+          src="{{item.avatar}}"
+          mode="aspectFill"
+          bindtap="onPreviewAvatar"
+          data-url="{{item.avatar}}"
+        ></image>
+      </view>
+
+      <!-- 信息 -->
+      <view class="card-info">
+        <!-- 姓名 -->
+        <view class="recommendor-name">{{item.name}}</view>
+
+        <!-- 评分 -->
+        <view class="rating-row">
+          <view class="stars">
+            <block wx:for="{{item.stars}}" wx:key="index">
+              <text class="star filled" wx:if="{{item.filled}}">★</text>
+              <text class="star half" wx:elif="{{item.half}}">★</text>
+              <text class="star" wx:else>★</text>
+            </block>
+          </view>
+          <text class="rating-score">{{item.rating ? item.rating.toFixed(1) : '0.0'}}</text>
+        </view>
+
+        <!-- 地区 -->
+        <view class="info-row" wx:if="{{item.region_address}}">
+          <text class="info-icon">📍</text>
+          <text class="info-text">{{item.region_address}}</text>
+        </view>
+
+        <!-- 简介 -->
+        <view class="bio" wx:if="{{item.bio}}">
+          <text class="bio-text">{{item.bio}}</text>
+        </view>
+
+        <!-- 状态标签 -->
+        <view class="status-row">
+          <view class="status-tag active" wx:if="{{item.status === 'active'}}">活跃</view>
+          <view class="status-tag inactive" wx:else>非活跃</view>
+        </view>
+
+        <!-- 查看详情 -->
+        <view class="view-detail">
+          <text class="detail-text">查看详情 ›</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 暂无数据 -->
+    <view class="empty-container" wx:if="{{recommendors.length === 0 && !loading}}">
+      <text class="empty-text">暂无推荐官</text>
+    </view>
+
+    <!-- 加载更多 -->
+    <view class="load-more" wx:if="{{recommendors.length > 0}}">
+      <text class="load-more-text" wx:if="{{loading && recommendors.length > 0}}">加载中...</text>
+      <text class="load-more-text" wx:elif="{{!hasMore}}">没有更多了</text>
+      <text class="load-more-text" wx:else>上拉加载更多</text>
+    </view>
+  </view>
+
+  <!-- 总数统计 -->
+  <view class="total-count" wx:if="{{total > 0}}">
+    <text>共 {{total}} 位推荐官</text>
+  </view>
+</view>

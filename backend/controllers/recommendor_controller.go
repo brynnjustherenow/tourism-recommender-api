@@ -187,6 +187,20 @@ func (rc *RecommendorController) GetRecommendors(c *gin.Context) {
 		query = utils.ApplyEqualFilter(query, "district_code", districtCode)
 	}
 
+	// Region filters by name (for WeChat Mini Program picker)
+	// Use fuzzy matching on region_address field
+	if province := c.Query("province"); province != "" {
+		query = query.Where("region_address LIKE ?", "%"+province+"%")
+	}
+
+	if city := c.Query("city"); city != "" {
+		query = query.Where("region_address LIKE ?", "%"+city+"%")
+	}
+
+	if district := c.Query("district"); district != "" {
+		query = query.Where("region_address LIKE ?", "%"+district+"%")
+	}
+
 	if status := c.Query("status"); status != "" {
 		query = utils.ApplyEqualFilter(query, "status", status)
 	}

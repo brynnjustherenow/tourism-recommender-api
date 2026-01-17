@@ -130,7 +130,8 @@ func SaveFile(fileHeader *multipart.FileHeader, file multipart.File, directory s
 	}
 
 	// Get relative path for URL
-	relativePath := strings.TrimPrefix(filePath, ".")
+	// Convert all path separators to forward slashes for URL compatibility
+	relativePath := strings.ReplaceAll(strings.TrimPrefix(filePath, "."), "\\", "/")
 
 	return &UploadResult{
 		FileName:    filename,
@@ -194,9 +195,10 @@ func ValidateDocument(fileHeader *multipart.FileHeader, file multipart.File) (*U
 	return ValidateAndSaveFile(fileHeader, file, config)
 }
 
-// GetFileURL returns the public URL for a file
+// GetFileURL returns a public URL for a file
 func GetFileURL(filePath string, baseURL string) string {
-	relativePath := strings.TrimPrefix(filePath, ".")
+	// Convert all path separators to forward slashes for URL compatibility
+	relativePath := strings.ReplaceAll(strings.TrimPrefix(filePath, "."), "\\", "/")
 	return fmt.Sprintf("%s%s", strings.TrimSuffix(baseURL, "/"), relativePath)
 }
 

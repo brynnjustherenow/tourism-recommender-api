@@ -64,6 +64,11 @@ const RegionSelector = ({
   // Handle change
   const handleChange = (selectedValue, selectedOptions) => {
     if (onChange) {
+      if (!selectedValue || selectedValue.length === 0) {
+        onChange(null, selectedValue, selectedOptions);
+        return;
+      }
+
       // Return object with codes and names
       const regionInfo = {
         provinceCode: selectedValue[0],

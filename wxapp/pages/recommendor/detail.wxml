@@ -1,0 +1,267 @@
+<!--pages/recommendor/detail.wxml-->
+<view class="container">
+  <!-- 返回按钮 -->
+  
+  <!-- 加载中 -->
+  <view class="loading-container" wx:if="{{loading}}">
+    <text class="loading-text">加载中...</text>
+  </view>
+
+  <!-- 内容区域 -->
+  <view class="content" wx:if="{{!loading && recommendor}}">
+    <!-- 头部卡片 -->
+    <view class="header-card">
+      <view class="avatar-section">
+        <image
+          class="avatar"
+          src="{{recommendor.avatar}}"
+          mode="aspectFill"
+          bindtap="onPreviewAvatar"
+        ></image>
+        <view class="rating-display">
+          <text class="rating-score">{{recommendor.rating ? recommendor.rating.toFixed(1) : '0.0'}}</text>
+          <view class="stars">
+            <block wx:for="{{recommendor.stars}}" wx:key="index">
+              <text class="star filled" wx:if="{{item.filled}}">★</text>
+              <text class="star half" wx:elif="{{item.half}}">★</text>
+              <text class="star" wx:else>★</text>
+            </block>
+          </view>
+        </view>
+      </view>
+
+      <view class="info-section">
+        <view class="name-row">
+          <text class="name">{{recommendor.name}}</text>
+          <view class="status-tag active" wx:if="{{recommendor.status === 'active'}}">活跃中</view>
+          <view class="status-tag inactive" wx:else>非活跃</view>
+        </view>
+
+        <view class="bio" wx:if="{{recommendor.bio}}">
+          <text class="bio-label">简介</text>
+          <text class="bio-text">{{recommendor.bio}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 详细信息卡片 -->
+    <view class="info-card">
+      <view class="card-title">详细信息</view>
+
+      <view class="info-group">
+        <view class="info-item">
+          <text class="info-label">姓名</text>
+          <text class="info-value">{{recommendor.name}}</text>
+        </view>
+
+        <view class="info-item">
+          <text class="info-label">性别</text>
+          <text class="info-value">
+            {{recommendor.gender === 'male' ? '男' : recommendor.gender === 'female' ? '女' : '其他'}}
+          </text>
+        </view>
+
+        <view class="info-item">
+          <text class="info-label">年龄</text>
+          <text class="info-value">{{recommendor.age}} 岁</text>
+        </view>
+
+        <view class="info-item">
+          <text class="info-label">证件号</text>
+          <text class="info-value">{{recommendor.id_number}}</text>
+        </view>
+
+        <view class="info-item">
+          <text class="info-label">电话</text>
+          <text class="info-value phone" bindtap="onCopyPhone">
+            {{recommendor.phone || '-'}}
+          </text>
+        </view>
+
+        <view class="info-item">
+          <text class="info-label">邮箱</text>
+          <text class="info-value email" bindtap="onCopyEmail">
+            {{recommendor.email || '-'}}
+          </text>
+        </view>
+
+        <view class="info-item">
+          <text class="info-label">地区</text>
+          <text class="info-value">{{recommendor.region_address || '-'}}</text>
+        </view>
+
+        <view class="info-item">
+          <text class="info-label">评分</text>
+          <text class="info-value">{{recommendor.rating ? recommendor.rating.toFixed(1) : '0.0'}} / 5.0</text>
+        </view>
+
+        <view class="info-item">
+          <text class="info-label">有效期</text>
+          <text class="info-value">
+            {{recommendor.valid_from}}
+            至
+            {{recommendor.valid_until}}
+          </text>
+        </view>
+
+        <view class="info-item">
+          <text class="info-label">注册时间</text>
+          <text class="info-value">{{recommendor.created_at}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 二维码卡片 -->
+    <view class="qrcode-card">
+      <view class="card-title">扫码联系</view>
+
+      <view class="qrcode-list">
+        <view class="qrcode-item">
+          <text class="qrcode-label">🔗 网页二维码</text>
+          <view class="qrcode-wrapper" wx:if="{{recommendor.qr_code_web}}">
+            <image
+              class="qrcode-image"
+              src="{{recommendor.qr_code_web}}"
+              mode="aspectFit"
+              bindtap="onPreviewQRCode"
+              data-url="{{recommendor.qr_code_web}}"
+            ></image>
+          </view>
+          <view class="qrcode-empty" wx:else>
+            <text>暂无二维码</text>
+          </view>
+          <text class="qrcode-tip">扫码跳转到网页详情页</text>
+          <button
+            class="save-qrcode-btn"
+            wx:if="{{recommendor.qr_code_web}}"
+            bindtap="onSaveQRCode"
+            data-url="{{recommendor.qr_code_web}}"
+          >
+            保存到相册
+          </button>
+        </view>
+
+        <view class="qrcode-item">
+          <text class="qrcode-label">💠 小程序二维码</text>
+          <view class="qrcode-wrapper" wx:if="{{recommendor.qr_code_wxapp}}">
+            <image
+              class="qrcode-image"
+              src="{{recommendor.qr_code_wxapp}}"
+              mode="aspectFit"
+              bindtap="onPreviewQRCode"
+              data-url="{{recommendor.qr_code_wxapp}}"
+            ></image>
+          </view>
+          <view class="qrcode-empty" wx:else>
+            <text>暂无二维码</text>
+          </view>
+          <text class="qrcode-tip">扫码跳转到小程序详情页</text>
+          <button
+            class="save-qrcode-btn"
+            wx:if="{{recommendor.qr_code_wxapp}}"
+            bindtap="onSaveQRCode"
+            data-url="{{recommendor.qr_code_wxapp}}"
+          >
+            保存到相册
+          </button>
+        </view>
+      </view>
+    </view>
+
+    <!-- 推荐目的地卡片 -->
+    <view class="destinations-card">
+      <view class="card-title">推荐目的地</view>
+
+      <!-- 加载中 -->
+      <view class="loading-container" wx:if="{{destinationsLoading && destinations.length === 0}}">
+        <text class="loading-text">加载中...</text>
+      </view>
+
+      <!-- 目的地列表 -->
+      <view class="destinations-list" wx:elif="{{destinations.length > 0}}">
+        <view
+          class="destination-card"
+          wx:for="{{destinations}}"
+          wx:key="id"
+        >
+          <!-- 目的地图片 -->
+          <view
+            class="destination-image-wrapper"
+            bindtap="onPreviewDestinationImage"
+            data-url="{{item.image}}"
+            data-images="{{[item.image]}}"
+          >
+            <image
+              class="destination-image"
+              src="{{item.image}}"
+              mode="aspectFill"
+            ></image>
+          </view>
+
+          <!-- 目的地信息 -->
+          <view class="destination-info">
+            <view class="destination-name">{{item.name}}</view>
+
+            <view class="destination-desc" wx:if="{{item.description}}">
+              {{item.description}}
+            </view>
+
+            <view class="destination-meta">
+              <view class="destination-rating">
+                <view class="mini-stars">
+                  <block wx:for="{{item.stars}}" wx:key="index">
+                    <text class="mini-star filled" wx:if="{{item.filled}}">★</text>
+                    <text class="mini-star half" wx:elif="{{item.half}}">★</text>
+                    <text class="mini-star" wx:else>★</text>
+                  </block>
+                </view>
+                <text class="mini-rating-score">{{item.rating ? item.rating.toFixed(1) : '0.0'}}</text>
+              </view>
+
+              <view
+                class="destination-tags"
+                wx:if="{{item.tags && item.tags.length > 0}}"
+              >
+                <text
+                  class="destination-tag"
+                  wx:for="{{item.tags.slice(0, 2)}}"
+                  wx:key="*this"
+                  wx:for-item="tag"
+                >
+                  {{tag}}
+                </text>
+                <text
+                  class="destination-tag more"
+                  wx:if="{{item.tags.length > 2}}"
+                >
+                  +{{item.tags.length - 2}}
+                </text>
+              </view>
+            </view>
+
+            <!-- 查看详情按钮 -->
+            <view
+              class="view-detail-btn"
+              bindtap="onViewDestination"
+              data-id="{{item.id}}"
+            >
+              <text>👁️ 查看详情</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 空状态 -->
+      <view class="empty-container" wx:elif="{{destinations.length === 0 && !destinationsLoading}}">
+        <text class="empty-text">暂无推荐的目的地</text>
+      </view>
+
+      <!-- 加载更多 -->
+      <view class="load-more" wx:if="{{destinations.length > 0}}">
+        <text class="load-more-text" wx:if="{{destinationsLoading && destinations.length > 0}}">加载中...</text>
+        <text class="load-more-text" wx:elif="{{!destinationsHasMore}}">没有更多了</text>
+        <text class="load-more-text" wx:else>上拉加载更多</text>
+      </view>
+    </view>
+  </view>
+</view>

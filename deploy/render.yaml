@@ -1,0 +1,47 @@
+services:
+  # Web Service Configuration
+  - type: web
+    name: tourism-recommender-api
+    runtime: go
+    plan: free
+    env: go
+    buildCommand: go build -o main main.go
+    startCommand: ./main
+    envVars:
+      - key: GIN_MODE
+        value: release
+      - key: SERVER_PORT
+        value: 8080
+      - fromDatabase:
+          name: tourism-recommender-db
+          property: connectionString
+          as: DATABASE_URL
+      - key: DB_HOST
+        fromDatabase:
+          name: tourism-recommender-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: tourism-recommender-db
+          property: port
+      - key: DB_USER
+        fromDatabase:
+          name: tourism-recommender-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: tourism-recommender-db
+          property: password
+      - key: DB_NAME
+        fromDatabase:
+          name: tourism-recommender-db
+          property: database
+      - key: DB_SSLMODE
+        value: require
+
+# Database Configuration
+databases:
+  - name: tourism-recommender-db
+    databaseName: tourism_recommender
+    user: tourism_user
+    plan: free

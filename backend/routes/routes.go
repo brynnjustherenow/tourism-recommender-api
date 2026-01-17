@@ -195,8 +195,13 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB) {
 	// Serve uploads directory
 	r.Static("/uploads", "./uploads")
 
-	// Serve index.html at root path
-	r.StaticFile("/", "./static/index.html")
+	// Catch-all route: serve index.html for all unmatched routes
+	// This is essential for SPA (Single Page Application) routing to work on page refresh
+	// When user refreshes /recommendors/123, this route returns index.html,
+	// and React Router takes over to handle the route
+	r.NoRoute(func(c *gin.Context) {
+		c.File("./static/index.html")
+	})
 }
 
 // SetupMiddleware configures middleware for the router

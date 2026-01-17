@@ -200,8 +200,8 @@ func getFullURL(c *gin.Context, relativePath string) string {
 	// Get host
 	host := c.Request.Host
 
-	// Remove leading "./" from relative path
-	path := strings.TrimPrefix(relativePath, "./")
+	// Remove leading "./" from relative path and convert all backslashes to forward slashes
+	path := strings.ReplaceAll(strings.TrimPrefix(relativePath, "./"), "\\", "/")
 
 	// Construct full URL
 	fullURL := fmt.Sprintf("%s://%s/%s", scheme, host, path)

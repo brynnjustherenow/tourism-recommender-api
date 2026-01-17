@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "旅游推荐官",
+  "navigationBarBackgroundColor": "#667eea",
+  "navigationBarTextStyle": "white",
+  "backgroundColor": "#f5f7fa",
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "light"
+}
