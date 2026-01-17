@@ -523,9 +523,10 @@ func (rc *RecommendorController) GetAdminRecommendors(c *gin.Context) {
 // generateQRCodes generates both web and mini program QR codes for a recommender
 func (rc *RecommendorController) generateQRCodes(recommendor *models.Recommendor) error {
 	qrConfig := utils.QRCodeConfig{
-		BaseURL:    os.Getenv("BASE_URL"),
-		MinAppID:   os.Getenv("WX_APP_ID"),
-		MinAppPath: os.Getenv("WX_APP_PATH"),
+		BaseURL:      os.Getenv("BASE_URL"),
+		MinAppID:     os.Getenv("WX_APP_ID"),
+		MinAppPath:   os.Getenv("WX_APP_PATH"),
+		MinAppSecret: os.Getenv("WX_APP_SECRET"),
 	}
 
 	// Set defaults if not provided
