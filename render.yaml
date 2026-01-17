@@ -17,10 +17,10 @@ services:
         value: 8080
 
       # Database Configuration (automatically linked from PostgreSQL service)
-      - fromDatabase:
+      - key: DATABASE_URL
+        fromDatabase:
           name: tourism-recommender-db
           property: connectionString
-          as: DATABASE_URL
       - key: DB_HOST
         fromDatabase:
           name: tourism-recommender-db
