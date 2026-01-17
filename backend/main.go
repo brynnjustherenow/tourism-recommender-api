@@ -30,6 +30,29 @@ func main() {
 	}
 	gin.SetMode(mode)
 
+	// Log environment configuration
+	log.Println("========================================")
+	log.Println("📋 Environment Configuration:")
+	log.Printf("  GIN_MODE: %s", mode)
+	log.Printf("  SERVER_PORT: %s", os.Getenv("SERVER_PORT"))
+	log.Printf("  DATABASE_URL: *** (%s)", func() string {
+		if os.Getenv("DATABASE_URL") != "" {
+			return "configured"
+		}
+		return "not set"
+	}())
+	log.Printf("  DB_HOST: %s", os.Getenv("DB_HOST"))
+	log.Printf("  DB_PORT: %s", os.Getenv("DB_PORT"))
+	log.Printf("  DB_USER: %s", os.Getenv("DB_USER"))
+	log.Printf("  DB_NAME: %s", os.Getenv("DB_NAME"))
+	log.Println("  DB_PASSWORD: *** (hidden)")
+	log.Println("")
+	log.Println("🔐 Default Admin Configuration:")
+	log.Printf("  Username: %s", os.Getenv("DEFAULT_ADMIN_USERNAME"))
+	log.Printf("  Password: %s", os.Getenv("DEFAULT_ADMIN_PASSWORD"))
+	log.Printf("  Email: %s", os.Getenv("DEFAULT_ADMIN_EMAIL"))
+	log.Println("========================================")
+
 	// Initialize database
 	log.Println("Initializing database connection...")
 	if err := config.InitDatabaseFromEnv(); err != nil {

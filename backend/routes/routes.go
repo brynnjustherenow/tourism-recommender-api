@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"log"
 	"os"
 
 	"tourism_recommendor/controllers"
@@ -260,24 +261,38 @@ func SeedDatabase(db *gorm.DB) error {
 		defaultEmail = "admin@tourism.com"
 	}
 
+	log.Printf("🔐 Seeding default admin account:")
+	log.Printf("  Username: %s", defaultUsername)
+	log.Printf("  Password: %s", defaultPassword)
+	log.Printf("  Email: %s", defaultEmail)
+
 	// Check if admin already exists
 	var existingAdmin models.Admin
 	result := db.Where("username = ?", defaultUsername).First(&existingAdmin)
 
 	if result.Error == nil {
-		// Admin already exists, update email if needed
-		if existingAdmin.Email != defaultEmail {
-			existingAdmin.Email = defaultEmail
-			db.Save(&existingAdmin)
+		// Admin already exists, update password and email to ensure correct credentials
+		log.Printf("📝 Admin '%s' already exists, updating password and email...", defaultUsername)
+		existingAdmin.Email = defaultEmail
+		if err := existingAdmin.SetPassword(defaultPassword); err != nil {
+			log.Printf("❌ Failed to update password for existing admin '%s': %v", defaultUsername, err)
+			return err
 		}
+		if err := db.Save(&existingAdmin).Error; err != nil {
+			log.Printf("❌ Failed to save updated admin '%s': %v", defaultUsername, err)
+			return err
+		}
+		log.Printf("✅ Admin '%s' updated successfully with new password", defaultUsername)
 		return nil
 	}
 
 	if result.Error != nil && result.Error.Error() != "record not found" {
+		log.Printf("❌ Error checking for existing admin: %v", result.Error)
 		return result.Error
 	}
 
 	// Create new admin
+	log.Printf("🆕 Creating new admin account for user '%s'...", defaultUsername)
 	admin := &models.Admin{
 		Username: defaultUsername,
 		Email:    defaultEmail,
@@ -289,13 +304,22 @@ func SeedDatabase(db *gorm.DB) error {
 
 	// Set password (this will hash it automatically)
 	if err := admin.SetPassword(defaultPassword); err != nil {
+		log.Printf("❌ Failed to set password: %v", err)
 		return err
 	}
 
 	// Save to database
 	if err := db.Create(admin).Error; err != nil {
+		log.Printf("❌ Failed to create admin in database: %v", err)
 		return err
 	}
+
+	log.Printf("✅ Default admin account created successfully:")
+	log.Printf("  Username: %s", admin.Username)
+	log.Printf("  Email: %s", admin.Email)
+	log.Printf("  ID: %d", admin.ID)
+	log.Printf("  Role: %s", admin.Role)
+	log.Printf("\n⚠️  IMPORTANT: Please change the default password after first login!")
 
 	return nil
 }

@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"log"
 	"net/http"
 	"time"
 
@@ -59,6 +60,7 @@ func (ac *AuthController) Login(c *gin.Context) {
 
 	// Bind request body
 	if err := c.ShouldBindJSON(&req); err != nil {
+		log.Printf("❌ Login failed: Invalid request format - %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error":   "Invalid request format",
 			"details": err.Error(),
@@ -66,15 +68,19 @@ func (ac *AuthController) Login(c *gin.Context) {
 		return
 	}
 
+	log.Printf("🔐 Login attempt received for username: %s", req.Username)
+
 	// Find admin by username
 	var admin models.Admin
 	if err := ac.DB.Where("username = ?", req.Username).First(&admin).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
+			log.Printf("❌ Login failed: User '%s' not found in database", req.Username)
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"error": "Invalid username or password",
 			})
 			return
 		}
+		log.Printf("❌ Login failed: Database error for user '%s' - %v", req.Username, err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":   "Database error",
 			"details": err.Error(),
@@ -82,8 +88,11 @@ func (ac *AuthController) Login(c *gin.Context) {
 		return
 	}
 
+	log.Printf("✅ User '%s' found in database - ID: %d, Role: %s, Status: %s", req.Username, admin.ID, admin.Role, admin.Status)
+
 	// Check if admin account is active
 	if !admin.IsActive() {
+		log.Printf("❌ Login failed: User '%s' account is not active - Status: %s", req.Username, admin.Status)
 		c.JSON(http.StatusForbidden, gin.H{
 			"error":  "Account is not active",
 			"status": admin.Status,
@@ -93,21 +102,27 @@ func (ac *AuthController) Login(c *gin.Context) {
 
 	// Verify password
 	if err := admin.CheckPassword(req.Password); err != nil {
+		log.Printf("❌ Login failed: Invalid password for user '%s' - %v", req.Username, err)
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"error": "Invalid username or password",
 		})
 		return
 	}
 
+	log.Printf("✅ Password verified successfully for user '%s'", req.Username)
+
 	// Generate JWT token
 	token, err := utils.GenerateToken(admin.ID, admin.Username, string(admin.Role))
 	if err != nil {
+		log.Printf("❌ Login failed: Failed to generate token for user '%s' - %v", req.Username, err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":   "Failed to generate token",
 			"details": err.Error(),
 		})
 		return
 	}
+
+	log.Printf("✅ Token generated successfully for user '%s'", req.Username)
 
 	// Update last login time
 	now := time.Now().Unix()
@@ -133,6 +148,7 @@ func (ac *AuthController) Login(c *gin.Context) {
 		},
 	}
 
+	log.Printf("🎉 Login successful for user '%s' (ID: %d, Role: %s)", req.Username, admin.ID, admin.Role)
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Login successful",
 		"data":    response,
