@@ -205,7 +205,7 @@ func getAccessToken(appID, appSecret string) (string, error) {
 	// Double-check after acquiring write lock
 	if tokenCache.token != "" && time.Now().Before(tokenCache.expiresAt) {
 		log.Printf("✅ Using cached access token (expires in: %v)", time.Until(tokenCache.expiresAt))
-		return tokenCache.token
+		return tokenCache.token, nil
 	}
 
 	// Prevent multiple concurrent refresh attempts
