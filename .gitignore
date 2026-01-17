@@ -1,1 +1,14 @@
 *.docx
+
+# Sensitive configuration files
+deploy/secrets/
+*.secrets
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# OS specific files
+.DS_Store
+Thumbs.db

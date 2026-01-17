@@ -49,7 +49,7 @@ services:
       - key: DEFAULT_ADMIN_USERNAME
         value: admin
       - key: DEFAULT_ADMIN_PASSWORD
-        value: admin123456
+        value: CHANGE_THIS_PASSWORD
       - key: DEFAULT_ADMIN_EMAIL
         value: admin@tourism.com
 
@@ -61,9 +61,9 @@ services:
       - key: WX_APP_PATH
         value: pages/recommendor/detail
       # WeChat Mini Program AppSecret (get from https://mp.weixin.qq.com)
-      # DO NOT use generateValue - this should be your actual secret from WeChat
+      # IMPORTANT: Set this in Render Dashboard after deployment
       - key: WX_APP_SECRET
-        value: 1e9e91b973084681e49e16cf8a9f301c
+        value: YOUR_WECHAT_APP_SECRET_HERE
 
 # Database Configuration
 databases:
