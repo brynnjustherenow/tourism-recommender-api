@@ -55,7 +55,27 @@ func InitDatabase(config DatabaseConfig) error {
 
 // InitDatabaseFromEnv initializes database connection from environment variables
 func InitDatabaseFromEnv() error {
-	log.Println("Loading database configuration from environment variables...")
+	// First, try to use DATABASE_URL (provided by Render and other platforms)
+	databaseURL := os.Getenv("DATABASE_URL")
+	if databaseURL != "" {
+		log.Println("Connecting to database using DATABASE_URL...")
+		log.Println("  URL: *** (hidden)")
+
+		var err error
+		DB, err = gorm.Open(postgres.Open(databaseURL), &gorm.Config{
+			Logger: logger.Default.LogMode(logger.Info),
+		})
+
+		if err != nil {
+			return fmt.Errorf("failed to connect to database using DATABASE_URL: %v", err)
+		}
+
+		log.Println("Database connection established successfully")
+		return nil
+	}
+
+	// Fallback: load database configuration from individual environment variables
+	log.Println("DATABASE_URL not found, loading database configuration from individual environment variables...")
 
 	// Get environment variables with defaults for non-critical fields
 	host := getEnvWithDefault("DB_HOST", "localhost", true)
